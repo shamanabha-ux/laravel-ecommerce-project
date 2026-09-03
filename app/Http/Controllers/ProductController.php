@@ -4,16 +4,25 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         //
-           $products = Product::all();
+         $query = Product::query();
+
+    // SEARCH
+    if ($request->has('search') && $request->search != '') {
+        $query->where('name', 'like', '%' . $request->search . '%');
+    }
+
+    // PAGINATION (6 products per page)
+    $products = $query->latest()->paginate(2);
         return view('products.index', compact('products'));
     }
 
@@ -59,11 +68,11 @@ class ProductController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
-        //
-    }
-
+  
+public function show(Product $product)
+{
+    return view('products.show', compact('product'));
+}
     /**
      * Show the form for editing the specified resource.
      */
@@ -77,7 +86,20 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        $product->update($request->all());
+
+        $data = $request->all();
+
+    if ($request->hasFile('image')) {
+
+        if ($product->image) {
+            Storage::disk('public')->delete($product->image);
+        }
+
+        $data['image'] = $request->file('image')->store('products', 'public');
+    }
+
+    $product->update($data);
+       // $product->update($request->all());
         return redirect()->route('products.index')->with('success', 'Updated');
     }
 
@@ -85,7 +107,7 @@ class ProductController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Product $product)
     {
         //
         $product->delete();

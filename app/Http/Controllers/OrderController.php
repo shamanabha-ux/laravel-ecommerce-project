@@ -8,7 +8,7 @@ use App\Models\OrderItem;
 use App\Models\Cart;
 class OrderController extends Controller
 {
-public function checkout()
+public function checkoutnn()
 {
     $cartItems = Cart::with('product')
         ->where('user_id', auth()->id())
